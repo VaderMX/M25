@@ -24,7 +24,6 @@ levelSelectionDiv.addEventListener('click', async (event) => {
             startQuiz();
         } else {
             alert(`No hay preguntas disponibles para el Nivel ${selectedLevel}.`);
-            // Asegúrate de volver al menú de selección de nivel si no hay preguntas.
             quizSection.style.display = 'none';
             levelSelectionDiv.style.display = 'block';
         }
@@ -68,24 +67,37 @@ function startQuiz() {
     currentQuestionIndex = 0;
     score = 0;
     displayQuestion();
-    nextQuestionBtn.disabled = true; // Asegurarse de que esté deshabilitado al inicio
+    nextQuestionBtn.disabled = true;
 }
 
 function displayQuestion() {
     const question = questions[currentQuestionIndex];
-    questionText.textContent = question.question;
-    optionsContainer.innerHTML = ''; // Limpiar opciones anteriores
+    // --- CAMBIOS AQUÍ ---
+    questionText.textContent = question.Enunciado; // Usamos "Enunciado" para el texto de la pregunta
+    optionsContainer.innerHTML = '';
 
-    question.options.forEach(option => {
+    // Creamos un array de opciones a partir de tus "Opción A", "Opción B", etc.
+    const currentOptions = [
+        question["Opción A"],
+        question["Opción B"],
+        question["Opción C"],
+        question["Opción D"]
+        // Agrega más si tienes Opción E, F, etc.
+    ].filter(option => option); // Filtra cualquier opción que sea undefined si no todas las preguntas tienen 4 opciones
+
+    currentOptions.forEach(optionText => { // Iteramos sobre el nuevo array de opciones
         const button = document.createElement('button');
-        button.textContent = option;
+        button.textContent = optionText;
         button.classList.add('option-btn');
-        button.addEventListener('click', () => selectAnswer(button, option, question.correctAnswer));
+        // Pasamos la opción de texto y la letra de la respuesta correcta (A, B, C, D)
+        button.addEventListener('click', () => selectAnswer(button, optionText, question["Respuesta Correcta"], currentOptions));
         optionsContainer.appendChild(button);
     });
+    // --- FIN CAMBIOS ---
 }
 
-function selectAnswer(selectedButton, selectedOption, correctAnswer) {
+// --- CAMBIOS AQUÍ: selectAnswer necesita más argumentos para manejar la letra de respuesta ---
+function selectAnswer(selectedButton, selectedOptionText, correctAnswerLetter, allOptions) {
     // Deshabilitar todos los botones de opción después de una selección
     Array.from(optionsContainer.children).forEach(button => {
         button.disabled = true;
@@ -93,20 +105,32 @@ function selectAnswer(selectedButton, selectedOption, correctAnswer) {
 
     selectedButton.classList.add('selected');
 
-    if (selectedOption === correctAnswer) {
+    // Mapea la letra de la respuesta correcta a su texto
+    let actualCorrectAnswerText = '';
+    switch (correctAnswerLetter) {
+        case 'A': actualCorrectAnswerText = allOptions[0]; break;
+        case 'B': actualCorrectAnswerText = allOptions[1]; break;
+        case 'C': actualCorrectAnswerText = allOptions[2]; break;
+        case 'D': actualCorrectAnswerText = allOptions[3]; break;
+        // Agrega más casos si tienes Opción E, F, etc.
+    }
+
+
+    if (selectedOptionText === actualCorrectAnswerText) {
         selectedButton.classList.add('correct');
         score++;
     } else {
         selectedButton.classList.add('incorrect');
         // Opcional: Mostrar la respuesta correcta
         Array.from(optionsContainer.children).forEach(button => {
-            if (button.textContent === correctAnswer) {
+            if (button.textContent === actualCorrectAnswerText) {
                 button.classList.add('correct');
             }
         });
     }
     nextQuestionBtn.disabled = false; // Habilitar el botón "Siguiente Pregunta"
 }
+// --- FIN CAMBIOS ---
 
 function showResults() {
     quizSection.style.display = 'none';
