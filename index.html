@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicación de Preguntas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Selecciona un Nivel</h1>
+        <div class="level-selection">
+            <button data-level="E">Nivel E (Básico)</button>
+            <button data-level="P">Nivel P (Intermedio)</button>
+            <button data-level="R">Nivel R (Avanzado)</button>
+        </div>
+
+        <div id="quiz-section" style="display: none;">
+            <h2 id="current-level-display"></h2>
+            <p id="question-text"></p>
+            <div id="options-container">
+                </div>
+            <button id="next-question-btn" disabled>Siguiente Pregunta</button>
+        </div>
+
+        <div id="results-section" style="display: none;">
+            <h2>Resultados</h2>
+            <p>Has respondido <span id="correct-answers-count">0</span> de <span id="total-questions-count">0</span> preguntas correctamente.</p>
+            <button id="restart-quiz-btn">Volver a Empezar</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
