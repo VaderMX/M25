@@ -106,12 +106,13 @@ function displayQuestion() {
         question["Opción B"],
         question["Opción C"],
         question["Opción D"]
-    ].filter(option => option);
+    ].filter(option => option); // Filtra cualquier opción que sea undefined si no todas las preguntas tienen 4 opciones
 
     currentOptions.forEach(optionText => {
         const button = document.createElement('button');
         button.textContent = optionText;
         button.classList.add('option-btn');
+        // Pasamos la opción de texto y la letra de la respuesta correcta (A, B, C, D)
         button.addEventListener('click', () => selectAnswer(button, optionText, question["Respuesta Correcta"], currentOptions));
         optionsContainer.appendChild(button);
     });
@@ -135,6 +136,7 @@ function selectAnswer(selectedButton, selectedOptionText, correctAnswerLetter, a
         case 'B': actualCorrectAnswerText = allOptions[1]; break;
         case 'C': actualCorrectAnswerText = allOptions[2]; break;
         case 'D': actualCorrectAnswerText = allOptions[3]; break;
+        // Agrega más casos si tienes Opción E, F, etc.
     }
 
 
@@ -188,6 +190,8 @@ function startTimer() {
                 button.disabled = true;
             });
             nextQuestionBtn.disabled = false; // Habilita el botón "Siguiente Pregunta"
+            // También puedes avanzar automáticamente a la siguiente pregunta si el tiempo se agota:
+            // nextQuestionBtn.click(); // Descomenta esta línea para avanzar automáticamente
         }
     }, 1000);
 }
