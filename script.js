@@ -2,6 +2,8 @@ let questions = [];
 let currentQuestionIndex = 0;
 let score = 0;
 let selectedLevel = '';
+let timeLeft = 10; // Tiempo en segundos para cada pregunta
+let timerInterval;
 
 const levelSelectionDiv = document.querySelector('.level-selection');
 const quizSection = document.getElementById('quiz-section');
@@ -13,17 +15,35 @@ const restartQuizBtn = document.getElementById('restart-quiz-btn');
 const correctAnswersCount = document.getElementById('correct-answers-count');
 const totalQuestionsCount = document.getElementById('total-questions-count');
 const currentLevelDisplay = document.getElementById('current-level-display');
+const timerDisplay = document.getElementById('timer-display'); // Elemento para mostrar el temporizador
+
+// Cambiar el texto de los botones de nivel
+const levelButtons = levelSelectionDiv.querySelectorAll('button');
+levelButtons.forEach(button => {
+    const level = button.dataset.level;
+    switch (level) {
+        case 'E':
+            button.textContent = 'Nivel Intermedio';
+            break;
+        case 'R':
+            button.textContent = 'Nivel Básico';
+            break;
+        case 'P':
+            button.textContent = 'Nivel Avanzado';
+            break;
+    }
+});
 
 // Event listeners para la selección de nivel
 levelSelectionDiv.addEventListener('click', async (event) => {
     if (event.target.tagName === 'BUTTON') {
         selectedLevel = event.target.dataset.level;
-        currentLevelDisplay.textContent = `Nivel: ${selectedLevel}`;
+        currentLevelDisplay.textContent = `Nivel: ${event.target.textContent}`; // Usar el texto del botón
         await loadQuestions(selectedLevel);
         if (questions.length > 0) {
             startQuiz();
         } else {
-            alert(`No hay preguntas disponibles para el Nivel ${selectedLevel}.`);
+            alert(`No hay preguntas disponibles para el Nivel ${event.target.textContent}.`); // Usar el texto del botón
             quizSection.style.display = 'none';
             levelSelectionDiv.style.display = 'block';
         }
@@ -33,7 +53,7 @@ levelSelectionDiv.addEventListener('click', async (event) => {
 // Event listener para el botón de siguiente pregunta
 nextQuestionBtn.addEventListener('click', () => {
     currentQuestionIndex++;
-    if (currentQuestionIndex < questions.length) {
+    if (currentQuestionIndex < Math.min(10, questions.length)) { // Limitar a 10 preguntas o al número total de preguntas
         displayQuestion();
         nextQuestionBtn.disabled = true; // Deshabilita hasta que se seleccione una opción
     } else {
@@ -68,36 +88,39 @@ function startQuiz() {
     score = 0;
     displayQuestion();
     nextQuestionBtn.disabled = true;
+    startTimer(); // Inicia el temporizador
 }
 
 function displayQuestion() {
+    if (!questions[currentQuestionIndex]) {
+        console.error('No hay pregunta en el índice:', currentQuestionIndex);
+        return; // Detiene la ejecución si no hay pregunta
+    }
+
     const question = questions[currentQuestionIndex];
-    // --- CAMBIOS AQUÍ ---
-    questionText.textContent = question.Enunciado; // Usamos "Enunciado" para el texto de la pregunta
+    questionText.textContent = question.Enunciado;
     optionsContainer.innerHTML = '';
 
-    // Creamos un array de opciones a partir de tus "Opción A", "Opción B", etc.
     const currentOptions = [
         question["Opción A"],
         question["Opción B"],
         question["Opción C"],
         question["Opción D"]
-        // Agrega más si tienes Opción E, F, etc.
-    ].filter(option => option); // Filtra cualquier opción que sea undefined si no todas las preguntas tienen 4 opciones
+    ].filter(option => option);
 
-    currentOptions.forEach(optionText => { // Iteramos sobre el nuevo array de opciones
+    currentOptions.forEach(optionText => {
         const button = document.createElement('button');
         button.textContent = optionText;
         button.classList.add('option-btn');
-        // Pasamos la opción de texto y la letra de la respuesta correcta (A, B, C, D)
         button.addEventListener('click', () => selectAnswer(button, optionText, question["Respuesta Correcta"], currentOptions));
         optionsContainer.appendChild(button);
     });
-    // --- FIN CAMBIOS ---
+    startTimer(); // Reinicia el temporizador para cada pregunta
 }
 
-// --- CAMBIOS AQUÍ: selectAnswer necesita más argumentos para manejar la letra de respuesta ---
 function selectAnswer(selectedButton, selectedOptionText, correctAnswerLetter, allOptions) {
+    clearInterval(timerInterval); // Detiene el temporizador al seleccionar una respuesta
+
     // Deshabilitar todos los botones de opción después de una selección
     Array.from(optionsContainer.children).forEach(button => {
         button.disabled = true;
@@ -112,7 +135,6 @@ function selectAnswer(selectedButton, selectedOptionText, correctAnswerLetter, a
         case 'B': actualCorrectAnswerText = allOptions[1]; break;
         case 'C': actualCorrectAnswerText = allOptions[2]; break;
         case 'D': actualCorrectAnswerText = allOptions[3]; break;
-        // Agrega más casos si tienes Opción E, F, etc.
     }
 
 
@@ -130,13 +152,14 @@ function selectAnswer(selectedButton, selectedOptionText, correctAnswerLetter, a
     }
     nextQuestionBtn.disabled = false; // Habilitar el botón "Siguiente Pregunta"
 }
-// --- FIN CAMBIOS ---
+
 
 function showResults() {
     quizSection.style.display = 'none';
     resultsSection.style.display = 'block';
     correctAnswersCount.textContent = score;
-    totalQuestionsCount.textContent = questions.length;
+    totalQuestionsCount.textContent = Math.min(10, questions.length); // Muestra el máximo de 10 o el número real de preguntas
+    clearInterval(timerInterval); // Detiene el temporizador al finalizar el quiz
 }
 
 function resetQuiz() {
@@ -147,4 +170,24 @@ function resetQuiz() {
     currentQuestionIndex = 0;
     score = 0;
     selectedLevel = '';
+    timeLeft = 10; // Restablece el tiempo
+    timerDisplay.textContent = ''; // Limpia el display del temporizador
+}
+
+function startTimer() {
+    clearInterval(timerInterval); // Limpia cualquier temporizador anterior
+    timeLeft = 10;
+    timerDisplay.textContent = `Tiempo restante: ${timeLeft}s`;
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `Tiempo restante: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            // Simula una respuesta incorrecta (o ninguna respuesta)
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true;
+            });
+            nextQuestionBtn.disabled = false; // Habilita el botón "Siguiente Pregunta"
+        }
+    }, 1000);
 }
